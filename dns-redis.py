@@ -38,6 +38,7 @@ class Cache:
         self.c.delete(key)
 
 cache=Cache()
+evt = event.Event()
 
 def handle_request(s,data,addr):
     req=dnslib.DNSRecord.parse(data)
@@ -49,8 +50,7 @@ def handle_request(s,data,addr):
         ret.header.id=qid;
         s.sendto(ret.pack(),addr)
     else:
-        e=event.Event()
-        cache.set(qname+"e",e)
+        cache.set(qname+"e",1)
         send_request(data)
         e.wait(60)
         tmp=cache.get(qname)
@@ -67,8 +67,8 @@ def handle_response(data):
     e=cache.get(qname+"e")
     cache.remove(qname+"e")
     if e:
-        e.set()
-        e.clear()
+        evt.set()
+        evt.clear()
 
 def handler(s,data,addr):
     req=dnslib.DNSRecord.parse(data)
